@@ -1,49 +1,22 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import * as React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomeScreen from './pages/home';
+import Meals from './pages/meals';
+import Workouts from './pages/workouts';
+import Weighins from './pages/weigh-ins';
+
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <View style={styles.appContainer}>
-      {/*sidebar -- gonna export this to another file later*/}
-      <View style={styles.redirectContainer}>
-        <Pressable style={styles.redirectButton}>
-          <Text style={styles.buttonText}>Workouts</Text>
-        </Pressable>
-        <Pressable style={styles.redirectButton}>
-          <Text style={styles.buttonText}>Meals</Text>
-        </Pressable>
-        <Pressable style={styles.redirectButton}>
-          <Text style={styles.buttonText}>Weigh-Ins</Text>
-        </Pressable>
-      </View>
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Meals" component={Meals} />
+        <Stack.Screen name="Workouts" component={Workouts} />
+        <Stack.Screen name="Weigh-ins" component={Weighins} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  appContainer: {
-    display: 'flex',
-    flexDirection: 'row',
-    flex: 1,
-  },
-  redirectContainer: {
-    width: '10%',
-    justifyContent: 'flex-start',
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: '#A9B4C2',
-  },
-  redirectButton: {
-    backgroundColor: '#FF4B0A',
-    borderRadius: '10%',
-    margin: '3%',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    height: '5%',
-  },
-  buttonText: {
-    color: '#EEF1EF',
-    fontSize: '100%',
-  }
-});
