@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Sidebar({navigation}){
+export default function Sidebar({navigation, onClose}){
 
   return(
     <View style={styles.redirectContainer}>
@@ -18,6 +18,11 @@ export default function Sidebar({navigation}){
       <LinearGradient colors={['#FF4B0A', '#df3c00ff']} style={styles.redirectButton}>
         <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Weigh-ins")}>
           <Text style={styles.buttonText}>Weigh-Ins</Text>
+        </Pressable>
+      </LinearGradient>
+      <LinearGradient colors={['#FF4B0A', '#df3c00ff']} style={styles.redirectButton}>
+        <Pressable style={styles.redirectPressable} onPress={onClose}>
+          <Text style={styles.buttonText}>Close</Text>
         </Pressable>
       </LinearGradient>
     </View>

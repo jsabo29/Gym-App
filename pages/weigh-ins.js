@@ -1,19 +1,20 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput} from 'react-native';
 import WeightDisplay from '../items/weight-display'
 import Graph from '../items/graph';
-
+import {fetchWeighIns, addWeight, removeWeight} from '../supa.js'
 
 export default function WeighIns() {
   const dateData = new Date()
-  console.log(dateData.getMonth()+1 + '/' + dateData.getDate() + '/' + dateData.getFullYear())
   const [date, setDate] = useState(dateData.getMonth()+1 + '/' + dateData.getDate() + '/' + dateData.getFullYear());
-  
-  {/* Change this once the backend is done */}
-  const weights = [[180,"10-01-2025"],[182,"10-02-2025"],[185,"10-03-2025"],[183,"10-04-2025"],[180,"10-05-2025"],[182,"10-06-2025"],[185,"10-07-2025"],[187,"10-08-2025"],[184,"10-09-2025"],[182,"10-10-2025"],[180,"10-11-2025"],[183,"10-12-2025"],[185,"10-13-2025"],[182,"10-14-2025"],[180,"10-15-2025"],[183,"10-16-2025"],[186,"10-17-2025"],[184,"10-18-2025"],[182,"10-19-2025"],[185,"10-20-2025"],[187,"10-21-2025"],[184,"10-22-2025"],[182,"10-23-2025"],[185,"10-24-2025"],[183,"10-25-2025"]];
+
+  const [weights, setWeights] = useState([])
+  useEffect(() => {
+    fetchWeighIns().then(setWeights)
+  }, [])
   const weightData = averageWeights(weights)
   const graphData = weightData.map((array) => ({x: array[1], y: array[0]}));
-  console.log(weightData)
+  const [weight, setWeight] = useState(weightData.length > 0 ? weightData[weightData.length-1][0] : 185)
 
   return(
     <ScrollView contentContainerStyle={styles.page}>
@@ -24,35 +25,47 @@ export default function WeighIns() {
         <View style={styles.addContainer}>
           <Text style={styles.label}>Weight</Text>
           <TextInput 
-            defaultValue={weightData.length > 0 ? weightData[weightData.length-1][0] : 185}
-            style={[styles.textbox, {width: 90}]}/>
+            id={"WeightTB"}
+            value={weight ?? ''}
+            style={[styles.textbox, {width: 90}]}
+            onChangeText={setWeight}/>
           <Text style={styles.label}>Date</Text>
           <TextInput 
-            placeholder="MM-DD-YYYY"
+            id={"DateTB"}
+            placeholder="MM/DD/YYYY"
             placeholderTextColor="#5E6572"
             keyboardType="numbers-and-punctuation"
-            value={date}
-            onChangeText={()=>setDate()}
+            value={date ?? ''}
+            onChangeText={setDate}
             style={[styles.textbox, {width: 210}]}/>
         </View>
-        <Pressable style={styles.submit}>
+        <Pressable style={styles.submit} onPress={async () => {
+          const newData = await addWeight({ weight, date });
+          if (newData) {
+            setWeights(prev => [...prev, ...newData]); // update state
+          }}}>
           <Text style={styles.submitText}>Submit</Text>
         </Pressable>
       </View>
 
-      <View>
-        {weights.map((array, index) =>
-          <WeightDisplay key={index} weight={array[0]} date={array[1]}/>
+      <View style={[{marginBottom: 20}]}>
+        {weights.slice().reverse().map((data, index) =>
+          <WeightDisplay key={index} index={weights.length-index-1} weight={data.weight} date={data.date} onDelete={deleteRow}/>
         )}
       </View>
     </ScrollView> 
   )
+
+  function deleteRow(index) {
+    removeWeight({id: weights[index].id})
+    setWeights(prev => prev.filter((_, i) => i !== index))
+  }
 }
 
 function averageWeights(weights) {
   const totals = {};
   const times = {}
-  weights.forEach(([weight, date]) => {
+  weights.forEach(({weight, date}) => {
     if (!times[date]) {
       times[date] = 1
       totals[date] = weight;
