@@ -19,14 +19,24 @@ if (Platform.OS === 'web') {
 }
 
 export default function Graph({data}) {
+  const yValues = data.map(d => d.y);
+  const minY = Math.min(...yValues);
+  const maxY = Math.max(...yValues);
+  const padding = (maxY - minY) * 0.05;
+  const domainY = [minY - padding, maxY + padding];
+
   return (
     <View style={styles.container}>
       {data.length>1 &&
-      <VictoryChart theme={VictoryTheme ? VictoryTheme.material : undefined} padding={{ top: 20, bottom: 80, left: 50, right: 20 }}>
+      <VictoryChart 
+        theme={VictoryTheme ? VictoryTheme.material : undefined} 
+        padding={{ top: 20, bottom: 80, left: 50, right: 20 }}
+        domain={{ y: domainY }}
+      >
         <VictoryAxis dependentAxis style={{tickLabels: {fill: '#5E6572'}}}/> 
         <VictoryAxis fixLabelOverlap style={{tickLabels: { angle: -90, textAnchor: 'end', fill: '#5E6572'}}}/>
         <VictoryLine
-          interpolation="natural"
+          interpolation="monotoneX"
           data={data}
           style={{ data: { stroke: '#FF4B0A', strokeWidth: 4 } }}
         />

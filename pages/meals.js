@@ -21,12 +21,12 @@ export default function Meals() {
 
   const caloriesThisWeek = caloriesData.length > 6 ? caloriesData.slice(-6).map(item => item.y).reduce((sum, val) => sum + val) : caloriesData.map(item => item.y).reduce((sum, val) => sum + val, 0);
   const caloriesLastWeek = caloriesData.length > 13 ? caloriesData.slice(-13, -6).map(item => item.y).reduce((sum, val) => sum + val) : (caloriesData.length > 6 ? caloriesData.slice(0, -6).map(item => item.y).reduce((sum, val) => sum + val, 0)*(7/(caloriesData.length-6)) : caloriesThisWeek);
-  const calorieAverage = toInteger(caloriesThisWeek/(Math.min(7, caloriesData.length+1)));
+  const calorieAverage = toInteger(caloriesThisWeek/(Math.min(7, caloriesData.length)));
   const calorieChange = toInteger((caloriesThisWeek/caloriesLastWeek-1)*100)
   const proteinThisWeek = proteinData.length > 6 ? proteinData.slice(-6).map(item => item.y).reduce((sum, val) => sum + val) : proteinData.map(item => item.y).reduce((sum, val) => sum + val, 0);
   const proteinLastWeek = proteinData.length > 13 ? proteinData.slice(-13, -6).map(item => item.y).reduce((sum, val) => sum + val) : (proteinData.length > 6 ? proteinData.slice(0, -6).map(item => item.y).reduce((sum, val) => sum + val, 0)*(7/(proteinData.length-6)) : proteinThisWeek);
   const proteinChange = toInteger((proteinThisWeek/proteinLastWeek-1)*100)
-  const proteinAverage = toInteger(proteinThisWeek/(Math.min(7, proteinData.length+1)));
+  const proteinAverage = toInteger(proteinThisWeek/(Math.min(7, proteinData.length)));
 
   const [calories, setCalories] = useState(caloriesData.length > 0 ? caloriesData[caloriesData.length-1][0] : 800)
   const [protein, setProtein] = useState(proteinData.length > 0 ? proteinData[proteinData.length-1][0] : 30)
@@ -71,14 +71,18 @@ export default function Meals() {
             keyboardType="numbers-and-punctuation"
             value={date}
             onChangeText={setDate}
-            style={[styles.textbox, {width: 210}]}/>
+            style={[styles.textbox, {width: 170}]}/>
         </View>
-        <Pressable style={styles.submit} onPress={() => addMeal({calories: calories, protein: protein, date: date})}>
+        <Pressable style={styles.submit} onPress={async () => {
+          const newData = await addMeal({calories, protein, date});
+          if (newData) {
+            setMeals(prev => [...prev, ...newData]); // update state        
+        }}}>
           <Text style={styles.submitText}>Submit</Text>
         </Pressable>
       </View>
 
-      <View>
+      <View style={[{marginBottom: 20}]}>
         {meals.slice().reverse().map((data, index) =>
           <MealDisplay key={index} index={meals.length-index-1} calories={data.calories} protein={data.protein} date={data.date} onDelete={deleteRow}/>
         )}

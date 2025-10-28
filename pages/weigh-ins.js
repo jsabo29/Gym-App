@@ -27,7 +27,7 @@ export default function WeighIns() {
           <TextInput 
             id={"WeightTB"}
             value={weight ?? ''}
-            style={[styles.textbox, {width: 90}]}
+            style={[styles.textbox, {width: 70}]}
             onChangeText={setWeight}/>
           <Text style={styles.label}>Date</Text>
           <TextInput 
@@ -37,7 +37,7 @@ export default function WeighIns() {
             keyboardType="numbers-and-punctuation"
             value={date ?? ''}
             onChangeText={setDate}
-            style={[styles.textbox, {width: 210}]}/>
+            style={[styles.textbox, {width: 170}]}/>
         </View>
         <Pressable style={styles.submit} onPress={async () => {
           const newData = await addWeight({ weight, date });

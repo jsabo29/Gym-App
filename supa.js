@@ -101,3 +101,54 @@ export async function removeMeal({id}) {
   console.log('Deleted row:', data);
   return data;
 }
+export async function fetchLifts() {
+  const { data, error } = await supabase
+    .from('lifts')
+    .select('movement, sets, reps, weight, date, id')
+    .eq('user_id', userId)
+    .order('date', { ascending: true })
+
+  if (error) {
+    console.error('Error fetching lifts:', error.message)
+    return []
+  }
+
+  return data
+}
+export async function addLift({movement, sets, reps, weight, date}) {
+  const { data, error } = await supabase
+    .from('lifts')
+    .insert([
+      {
+        user_id: userId,
+        reps: reps,
+        sets: sets,
+        weight: weight,
+        movement: movement,
+        date: date,
+      },
+    ])
+    .select()
+
+  if (error) {
+    console.error('Error inserting lift:', error.message)
+    return null
+  }
+
+  console.log('Inserted row:', data)
+  return data
+}
+export async function removeLift({id}) {
+  const { data, error } = await supabase
+    .from('lifts')
+    .delete()
+    .eq('id', id); // delete where id matches
+
+  if (error) {
+    console.error('Error deleting lift:', error.message);
+    return null;
+  }
+
+  console.log('Deleted row:', data);
+  return data;
+}
