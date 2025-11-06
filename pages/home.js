@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View, Pressable, Image, Dimensions, ScrollView } from 'react-native';
-import React, {useState, useEffect} from 'react'
+import { StyleSheet, View, Dimensions, ScrollView } from 'react-native';
+import {useState, useEffect} from 'react'
+
 import Sidebar from "../items/sidebar"
 import Recipe from "../items/recipe"
 import Bottombar from "../items/bottombar"

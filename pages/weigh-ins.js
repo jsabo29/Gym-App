@@ -1,10 +1,11 @@
-import React, {useState, useEffect} from 'react';
-import { Dimensions, StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput} from 'react-native';
+import {useState, useEffect} from 'react';
+import { Dimensions, StyleSheet, Text, View, Pressable, ScrollView, TextInput} from 'react-native';
+
 import WeightDisplay from '../items/weight-display'
 import Graph from '../items/graph';
-import Bottombar from '../items/bottombar.js'
 import Sidebar from '../items/sidebar.js'
 import FillerDisplay from '../items/filler-display.js'
+
 import {fetchWeighIns, addWeight, removeWeight} from '../supa.js'
 
 export default function WeighIns( {navigation} ) {

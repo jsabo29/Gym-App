@@ -1,5 +1,5 @@
-import { StyleSheet, Text, View, Pressable, Image} from 'react-native';
-import React, { useState } from 'react';
+import { StyleSheet, Text, View, Pressable} from 'react-native';
+import { useState } from 'react';
 
 export default function WeightsDisplay({index, weight, date, onDelete, width}){
   const [deleteIsPressed, changeDeleteIsPressed] = useState(false)

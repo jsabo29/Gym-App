@@ -1,4 +1,3 @@
-import React, {useEffect, useState} from 'react';
 import { View, StyleSheet, Platform, Text } from 'react-native';
 import { Line } from 'react-native-svg';
 

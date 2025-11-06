@@ -1,12 +1,13 @@
-import React, {useState, useEffect} from 'react';
-import { Platform, Dimensions, StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput} from 'react-native';
+import {useState, useEffect} from 'react';
+import {Dimensions, StyleSheet, Text, View, Pressable, ScrollView, TextInput} from 'react-native';
+import DropDownPicker from 'react-native-dropdown-picker';
+
 import LiftDisplay from '../items/lift-display'
 import Graph from '../items/graph';
 import FillerDisplay from '../items/filler-display.js'
-import {fetchLifts, addLift, removeLift} from '../supa.js'
-import Bottombar from '../items/bottombar.js'
 import Sidebar from '../items/sidebar.js';
-import DropDownPicker from 'react-native-dropdown-picker';
+
+import {fetchLifts, addLift, removeLift} from '../supa.js'
 
 export default function Workouts({navigation}) {
   const [open, setOpen] = useState(false);

@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View, Pressable, Image, Platform } from 'react-native';
+import { StyleSheet, View, Pressable, Image, Platform } from 'react-native';
 
 export default function Bottombar({navigation}){
 

@@ -1,7 +1,8 @@
-import React, {useState, useEffect} from 'react'
+import {useState, useEffect} from 'react'
+import {Platform, View, KeyboardAvoidingView, Dimensions} from 'react-native'
+
 import Meals from './meals'
 import Bottombar from '../items/bottombar';
-import {Platform, View, KeyboardAvoidingView, Dimensions} from 'react-native'
 
 export default function MealsWrapper( {navigation} ) {
   const [windowWidth, setWindowWidth] = useState(Dimensions.get('window').width);

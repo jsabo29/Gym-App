@@ -1,12 +1,13 @@
-import React, {useState, useEffect} from 'react';
-import { Dimensions, StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput, KeyboardAvoidingView} from 'react-native';
+import {useState, useEffect} from 'react';
+import { Dimensions, StyleSheet, Text, View, Pressable, ScrollView, TextInput} from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { toInteger } from 'lodash';
+
 import MealDisplay from '../items/meal-display'
 import Graph from '../items/graph';
-import Bottombar from '../items/bottombar.js'
 import FillerDisplay from '../items/filler-display.js'
 import Sidebar from '../items/sidebar.js'
-import { toInteger } from 'lodash';
+
 import {fetchMeals, addMeal, removeMeal} from '../supa.js'
 
 export default function Meals({navigation}) {
