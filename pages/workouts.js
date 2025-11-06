@@ -1,13 +1,15 @@
 import React, {useState, useEffect} from 'react';
-import { StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput} from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { Platform, Dimensions, StyleSheet, Text, View, Pressable, Image, ScrollView, TextInput} from 'react-native';
 import LiftDisplay from '../items/lift-display'
 import Graph from '../items/graph';
-import { toInteger } from 'lodash';
+import FillerDisplay from '../items/filler-display.js'
 import {fetchLifts, addLift, removeLift} from '../supa.js'
+import Bottombar from '../items/bottombar.js'
+import Sidebar from '../items/sidebar.js';
+import DropDownPicker from 'react-native-dropdown-picker';
 
-export default function Workouts() {
-  const [selectedValue, setSelectedValue] = useState("Bench");
+export default function Workouts({navigation}) {
+  const [open, setOpen] = useState(false);
   const dateData = new Date()
   const [date, setDate] = useState(dateData.getMonth()+1 + '/' + dateData.getDate() + '/' + dateData.getFullYear());
   
@@ -16,8 +18,11 @@ export default function Workouts() {
     fetchLifts().then(setLifts)
   }, []) 
   const existingLifts = getExistingLifts(lifts);
+  console.log('existingLifts: ' + existingLifts)
+  const pickerItems = existingLifts.map(value => { return { label: value, value: value }; });
+  console.log(pickerItems)
+  const [selectedValue, setSelectedValue] = useState(pickerItems[0]?.value || "Bench");
   const volumes = getVolume(lifts, selectedValue).map((array) => ({x: array[1], y: array[0]}));
-  console.log(volumes)
 
   //for textboxes
   const [movement, setMovement] = useState('Bench')
@@ -25,69 +30,143 @@ export default function Workouts() {
   const [sets, setSets] = useState(3)
   const [weight, setWeight] = useState(225)
 
-  return(
-    <ScrollView contentContainerStyle={styles.page}>
-      <Graph data={volumes}/>
-      <View style={styles.textContainer}>
-        <Text style={styles.text}>Note: The graph displays volume (sets x reps x weight)</Text>
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.text}>Select Movement: </Text>
-        <Picker 
-          style={styles.graphPicker}
-          selectedValue={selectedValue}
-          dropdownIconColor="transparent"
-          onValueChange={(itemValue) => setSelectedValue(itemValue)}>
-            {existingLifts.map((mvmnt) => <Picker.Item label={mvmnt} value={mvmnt}/>)}
-          </Picker>
-      </View>
-      <View style={styles.bottomContainer}>
-        {/* This is to add another lift to the log */}
-        <Text style={styles.title}>Log a Workout</Text>
-        <View style={styles.rowContainer}>
-          <View style={styles.addContainer}>
-            <Text style={styles.label}>Movement</Text>
-            <TextInput 
-              value={movement ?? ''}
-              onChangeText={setMovement}
-              style={[styles.textbox, {width: 200}]}/>
-            <Text style={styles.label}>Weight</Text>
-            <TextInput 
-              value={weight ?? ''}
-              onChangeText={setWeight}
-              style={[styles.textbox, {width: 130}]}/>
-          </View>
-          <View style={styles.addContainer}>
-            <Text style={styles.label}>Sets</Text>
-            <TextInput 
-              value={sets ?? ''}
-              onChangeText={setSets}
-              style={[styles.textbox, {width: 50}]}/>
-              <Text style={styles.label}>Sets</Text>
-            <TextInput 
-              value={reps ?? ''}
-              onChangeText={setReps}
-              style={[styles.textbox, {width: 50}]}/>
-            <Text style={styles.label}>Date</Text>
-            <TextInput 
-              placeholder="MM/DD/YYYY"
-              placeholderTextColor="#5E6572"
-              keyboardType="numbers-and-punctuation"
-              value={date}
-              onChangeText={setDate}
-              style={[styles.textbox, {width: 170}]}/>
-          </View>
-        </View>
-        <Pressable style={styles.submit} onPress={async () => {
-          const newData = await addLift({movement, sets, reps, weight, date});
-          if (newData) {
-            setLifts(prev => [...prev, ...newData]); // update state        
-        }}}>
-          <Text style={styles.submitText}>Submit</Text>
-        </Pressable>
-      </View>
+  //screen data
+  const [windowWidth, setWindowWidth] = useState(Dimensions.get('window').width);
+  const [windowHeight, setWindowHeight] = useState(Dimensions.get('window').height);
 
-      <View style={[{marginBottom: 20}]}>
+  // Listen for window size changes
+  useEffect(() => {
+    const subscription = Dimensions.addEventListener('change', ({ window }) => {
+      setWindowWidth(window.width);
+      setWindowHeight(window.height);
+    });
+    return () => subscription?.remove();
+  }, []);
+  const aspectRatio = windowWidth/windowHeight;
+
+  return(
+    <ScrollView contentContainerStyle={[styles.page, {flexDirection: 1.2*windowHeight<windowWidth ? 'row' : 'columm'}]}>
+
+      {/* Sidebar and/or Bottombar */}
+      {aspectRatio>1.2 && 
+      <View style={{height: windowHeight}}>
+        <Sidebar navigation={navigation} text={aspectRatio > 1.8}/>
+      </View>
+      }
+      
+      {/* Graph and Add Menu */}
+      <ScrollView contentContainerStyle={[styles.page, {alignItems: 'center', justifyContent: 'flex-start', height: 1.2*windowHeight<windowWidth ? windowHeight : 'auto'}]}>
+        <Graph data={volumes} size={Math.max(windowHeight*0.4, windowWidth*0.4)}/>
+        <View style={[styles.textContainer, {marginTop: 0}]}>
+          <Text style={[styles.text, {fontSize: 15}]}>Note: The graph displays volume (sets x reps x weight)</Text>
+        </View>
+        <View style={[styles.textContainer, {marginTop: 20}]}>
+          <DropDownPicker
+            open={open}
+            value={selectedValue}
+            items={pickerItems}
+            setOpen={setOpen}
+            setValue={setSelectedValue}
+            containerStyle={{ width: 200 }}
+            style={{ backgroundColor: '#FF4B0A' }}
+            dropDownStyle={{ backgroundColor: '#FF4B0A' }}
+            textStyle={{ color: '#000', fontSize: 20 }}
+          />  
+        </View>
+        <View style={styles.bottomContainer}>
+          {/* This is to add another lift to the log */}
+          <Text style={[styles.title, {fontSize: Math.min(50, windowWidth/9)}]}>Log a Workout</Text>
+          {windowHeight < windowWidth && 
+          <View style={styles.rowContainer}>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Movement</Text>
+              <TextInput 
+                value={movement ?? ''}
+                onChangeText={setMovement}
+                style={[styles.textbox, {width: 200}]}/>
+              <Text style={styles.label}>Weight</Text>
+              <TextInput 
+                value={weight ?? ''}
+                onChangeText={setWeight}
+                style={[styles.textbox, {width: 130}]}/>
+            </View>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Sets</Text>
+              <TextInput 
+                value={sets ?? ''}
+                onChangeText={setSets}
+                style={[styles.textbox, {width: 50}]}/>
+              <Text style={styles.label}>Reps</Text>
+              <TextInput 
+                value={reps ?? ''}
+                onChangeText={setReps}
+                style={[styles.textbox, {width: 50}]}/>
+              <Text style={styles.label}>Date</Text>
+              <TextInput 
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#5E6572"
+                keyboardType="numbers-and-punctuation"
+                value={date}
+                onChangeText={setDate}
+                style={[styles.textbox, {width: 170}]}/>
+            </View>
+          </View>
+          }
+          {windowHeight >= windowWidth && 
+          <View style={styles.rowContainer}>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Movement: </Text>
+              <TextInput 
+                value={movement ?? ''}
+                onChangeText={setMovement}
+                style={[styles.textbox, {flex: 1}]}/>
+            </View>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Weight: </Text>
+              <TextInput 
+                value={weight ?? ''}
+                onChangeText={setWeight}
+                style={[styles.textbox, {flex: 1}]}/>
+            </View>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Sets: </Text>
+              <TextInput 
+                value={sets ?? ''}
+                onChangeText={setSets}
+                style={[styles.textbox, {flex: 1}]}/>
+            </View>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Reps: </Text>
+              <TextInput 
+                value={reps ?? ''}
+                onChangeText={setReps}
+                style={[styles.textbox, {flex: 1}]}/>
+            </View>
+            <View style={styles.addContainer}>
+              <Text style={styles.label}>Date: </Text>
+              <TextInput 
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#5E6572"
+                keyboardType="numbers-and-punctuation"
+                value={date}
+                onChangeText={setDate}
+                style={[styles.textbox, {flex: 1}]}/>
+            </View>
+          </View>
+          }
+          <Pressable style={styles.submit} onPress={async () => {
+            const newData = await addLift({movement, sets, reps, weight, date});
+            if (newData) {
+              setLifts(prev => [...prev, ...newData]); // update state        
+            }}}>
+            <Text style={styles.submitText}>Submit</Text>
+          </Pressable>
+        </View>
+      </ScrollView>
+
+      {/* Data List Display */}
+      {windowHeight>=windowWidth && 
+      <View style={[{padding: 20, justifyContent: 'center', alignItems: 'center', paddingBottom: 100}]}>
         {lifts.slice().reverse().map((data, index) =>
           <LiftDisplay 
           key={index} 
@@ -97,9 +176,29 @@ export default function Workouts() {
           movement={data.movement} 
           date={data.date} 
           weight={data.weight} 
-          onDelete={deleteRow}/>
+          onDelete={deleteRow}
+          width={windowWidth*0.95}/>
         )}
-      </View>
+        {lifts.length == 0 && <FillerDisplay width={windowWidth*0.95}/>}
+      </View>}
+      {windowHeight<windowWidth &&
+      <View style={{height:windowHeight, alignItems: 'center', borderLeftWidth: 0.5, borderLeftColor: '#555'}}>
+        <ScrollView contentContainerStyle={[{padding: 20, height:windowHeight, alignItems: 'center'}]}>
+          {lifts.slice().reverse().map((data, index) =>
+            <LiftDisplay 
+            key={index} 
+            index={lifts.length-index-1} 
+            sets={data.sets} 
+            reps={data.reps} 
+            movement={data.movement} 
+            date={data.date} 
+            weight={data.weight} 
+            onDelete={deleteRow}
+            width={windowWidth*0.3}/>
+          )}
+          {lifts.length == 0 && <FillerDisplay width={windowWidth*0.3}/>}
+        </ScrollView>
+      </View>}
     </ScrollView> 
   )
   function deleteRow(index) {
@@ -110,7 +209,6 @@ export default function Workouts() {
 
 function getVolume(lifts, liftType) {
   const totals = {};
-
   lifts.forEach(({sets, reps, weight, date, movement}) => {
     if (movement == liftType) {
       if (!totals[date]) {
@@ -141,14 +239,9 @@ function getExistingLifts(lifts) {
 const styles=StyleSheet.create({
   page: {
     flexGrow: 1,
-    padding: 40,
     paddingBottom: 0,
-    backgroundColor: "#5E6572",
-    alignItems: "center",
-  },
-  graph: {
-    height: 400,
-    aspectRatio: "1",
+    backgroundColor: "#000",
+    justifyContent: "center",
   },
   graphPicker: {
     backgroundColor: '#FF4B0A',
@@ -157,18 +250,18 @@ const styles=StyleSheet.create({
     fontSize: 30,
     border: 'none',
     borderRadius: 5,
-    userSelect: "none",
-    justifyContent: 'center',
-    alignItems: 'center'
+    userSelect: "none"
   },
   text: {
     fontSize: 30,
-    color: '#EEF1EF'
+    color: '#EEF1EF',
+    textAlign: 'center'
   },
   textContainer: {
     display: "flex",
-    flexDirection: "row",
-    alignItems: 'center'
+    flexDirection: "column",
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   title: {
     fontSize: 50,
@@ -186,17 +279,22 @@ const styles=StyleSheet.create({
     display: 'flex',
     flexDirection: 'row',
     margin: 8,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   textbox: {
     padding: 4,
-    backgroundColor: '#EEF1EF',
-    color: 'black',
+    backgroundColor: '#25272D',
+    color: '#EEF1EF',
     fontSize: 30,
-    border: 'none',
     borderRadius: 7,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#FF4B0A'
   },
   label: {
-    marginLeft: 12,
+    marginLeft: 6,
     color: '#EEF1EF',
     fontSize: 30,
     margin: 4,
@@ -235,5 +333,5 @@ const styles=StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-  }
+  },
 })
