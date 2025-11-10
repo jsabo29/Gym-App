@@ -1,10 +1,40 @@
 import { SUPABASE_URL, SUPABASE_KEY } from '@env'
-import { createClient } from '@supabase/supabase-js'
+import { useEffect } from 'react'
+import { createClient, processLock } from '@supabase/supabase-js'
+import { AppState, Platform, Alert } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import 'react-native-url-polyfill/auto'
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-const userId = 'Sample_ID_Will_Be_Auto_Generated_Later'
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {auth: {
+    ...(Platform.OS !== "web" ? { storage: AsyncStorage } : {}),
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+    lock: processLock,
+  }})
+if (Platform.OS !== "web") {
+  AppState.addEventListener('change', (state) => {
+    if (state === 'active') {
+      supabase.auth.startAutoRefresh()
+    } else {
+      supabase.auth.stopAutoRefresh()
+    }
+  })
+}
 
+export const getUserId = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user?.id ?? null
+}
 export async function fetchWeighIns() {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('weigh_ins')
     .select('weight, date, id')
@@ -19,6 +49,12 @@ export async function fetchWeighIns() {
   return data
 }
 export async function addWeight({weight, date}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('weigh_ins')
     .insert([
@@ -39,10 +75,17 @@ export async function addWeight({weight, date}) {
   return data
 }
 export async function removeWeight({id}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('weigh_ins')
     .delete()
-    .eq('id', id); // delete where id matches
+    .eq('id', id)
+    .eq('user_id', userId); // delete where id matches
 
   if (error) {
     console.error('Error deleting weigh-in:', error.message);
@@ -53,6 +96,12 @@ export async function removeWeight({id}) {
   return data;
 }
 export async function fetchMeals() {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('meals')
     .select('calories, protein, date, id')
@@ -67,6 +116,12 @@ export async function fetchMeals() {
   return data
 }
 export async function addMeal({calories, protein, date}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('meals')
     .insert([
@@ -88,10 +143,17 @@ export async function addMeal({calories, protein, date}) {
   return data
 }
 export async function removeMeal({id}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('meals')
     .delete()
-    .eq('id', id); // delete where id matches
+    .eq('id', id)
+    .eq('user_id', userId); // delete where id matches
 
   if (error) {
     console.error('Error deleting meal:', error.message);
@@ -102,6 +164,12 @@ export async function removeMeal({id}) {
   return data;
 }
 export async function fetchLifts() {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('lifts')
     .select('movement, sets, reps, weight, date, id')
@@ -116,6 +184,12 @@ export async function fetchLifts() {
   return data
 }
 export async function addLift({movement, sets, reps, weight, date}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('lifts')
     .insert([
@@ -139,10 +213,17 @@ export async function addLift({movement, sets, reps, weight, date}) {
   return data
 }
 export async function removeLift({id}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+
   const { data, error } = await supabase
     .from('lifts')
     .delete()
-    .eq('id', id); // delete where id matches
+    .eq('id', id)
+    .eq('user_id', userId); // delete where id matches
 
   if (error) {
     console.error('Error deleting lift:', error.message);
@@ -151,4 +232,22 @@ export async function removeLift({id}) {
 
   console.log('Deleted row:', data);
   return data;
+}
+export async function signInWithEmail({email, password}) {
+  const { error } = await supabase.auth.signInWithPassword({
+    email: email,
+    password: password,
+  })
+  return error
+}
+export async function signUpWithEmail({email, password}) {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+  })
+  if (!session) Alert.alert('Please check your inbox for email verification!')
+  return error
 }
