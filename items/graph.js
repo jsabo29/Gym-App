@@ -21,7 +21,6 @@ if (Platform.OS === 'web') {
 
 export default function Graph({data, size}) {
   const graphDimension = size
-  console.log('size: ' + size)
 
   const parsedData = data.map(d => ({
     x: new Date(d.x + 'T00:00:00Z'),
@@ -33,10 +32,6 @@ export default function Graph({data, size}) {
   const maxY = Math.max(...yValues);
   const padding = (maxY - minY) * 0.05;
   const domainY = [minY - padding, maxY + padding];
-  console.log('VictoryChart:', VictoryChart);
-  console.log('VictoryLine:', VictoryLine);
-  console.log('VictoryAxis:', VictoryAxis);
-  console.log('VictoryTheme:', VictoryTheme);
   return (
     <View style={[styles.container, {width: graphDimension}, {paddingTop: graphDimension*0.1}, {paddingBottom: graphDimension/20}, {paddingRight: graphDimension/20}, {paddingLeft: graphDimension/20}]}>
       {parsedData.length>1 &&
@@ -53,13 +48,13 @@ export default function Graph({data, size}) {
             tickLabels: {fill: '#EEF1EF', fontSize: graphDimension/25},
             grid: { stroke: '#EEF1EF', strokeDasharray: '5,5' } // dotted horizontal lines
             }}
-          gridComponent={<Line />}/> 
+          gridComponent={<Line/>}/> 
         <VictoryAxis 
           style={{
             tickLabels: { angle: -90, textAnchor: 'end', fill: '#EEF1EF', fontSize: graphDimension/25 },
             grid: { stroke: '#EEF1EF', strokeDasharray: '5,5' } // dotted horizontal lines
           }}
-          gridComponent={<Line />}/>
+          gridComponent={<Line/>}/>
         <VictoryLine
           interpolation="monotoneX"
           data={parsedData}

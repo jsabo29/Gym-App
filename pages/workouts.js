@@ -19,11 +19,9 @@ export default function Workouts({navigation}) {
     fetchLifts().then(setLifts)
   }, []) 
   const existingLifts = getExistingLifts(lifts);
-  console.log('existingLifts: ' + existingLifts)
   const pickerItems = existingLifts.map(value => { return { label: value, value: value }; });
-  console.log(pickerItems)
   const [selectedValue, setSelectedValue] = useState(pickerItems[0]?.value || "Bench");
-  const volumes = getVolume(lifts, selectedValue).map((array) => ({x: array[1], y: array[0]}));
+  const oneRepMaxes = getOneRepMax(lifts, selectedValue).map((array) => ({x: array[1], y: array[0]}));
 
   //for textboxes
   const [movement, setMovement] = useState('Bench')
@@ -57,11 +55,11 @@ export default function Workouts({navigation}) {
       
       {/* Graph and Add Menu */}
       <ScrollView contentContainerStyle={[styles.page, {alignItems: 'center', justifyContent: 'flex-start', height: 1.2*windowHeight<windowWidth ? windowHeight : 'auto'}]}>
-        <Graph data={volumes} size={Math.max(windowHeight*0.4, windowWidth*0.4)}/>
+        <Graph data={oneRepMaxes} size={Math.max(windowHeight*0.4, windowWidth*0.4)}/>
         <View style={[styles.textContainer, {marginTop: 0}]}>
-          <Text style={[styles.text, {fontSize: 15}]}>Note: The graph displays volume (sets x reps x weight)</Text>
+          <Text style={[styles.text, {fontSize: 15}]}>Lombardi one rep max estimate</Text>
         </View>
-        <View style={[styles.textContainer, {marginTop: 20}]}>
+        <View style={[styles.textContainer, {marginTop: 20, zIndex: 1000, elevation: 1000}]}>
           <DropDownPicker
             open={open}
             value={selectedValue}
@@ -69,7 +67,7 @@ export default function Workouts({navigation}) {
             setOpen={setOpen}
             setValue={setSelectedValue}
             containerStyle={{ width: 200 }}
-            style={{ backgroundColor: '#FF4B0A' }}
+            style={{ backgroundColor: '#FF4B0A', zIndex: 1000, elevation: 1000}}
             dropDownStyle={{ backgroundColor: '#FF4B0A' }}
             textStyle={{ color: '#000', fontSize: 20 }}
           />  
@@ -169,7 +167,7 @@ export default function Workouts({navigation}) {
       {windowHeight>=windowWidth && 
       <View style={[{padding: 20, justifyContent: 'center', alignItems: 'center', paddingBottom: 100}]}>
         {lifts.slice().reverse().map((data, index) =>
-          <LiftDisplay 
+          (data.movement == selectedValue && <LiftDisplay 
           key={index} 
           index={lifts.length-index-1} 
           sets={data.sets} 
@@ -178,15 +176,15 @@ export default function Workouts({navigation}) {
           date={data.date} 
           weight={data.weight} 
           onDelete={deleteRow}
-          width={windowWidth*0.95}/>
+          width={windowWidth*0.95}/>)
         )}
         {lifts.length == 0 && <FillerDisplay width={windowWidth*0.95}/>}
       </View>}
       {windowHeight<windowWidth &&
       <View style={{height:windowHeight, alignItems: 'center', borderLeftWidth: 0.5, borderLeftColor: '#555'}}>
         <ScrollView contentContainerStyle={[{padding: 20, height:windowHeight, alignItems: 'center'}]}>
-          {lifts.slice().reverse().map((data, index) =>
-            <LiftDisplay 
+          {lifts.slice().reverse().map((data, index) => 
+            (data.movement == selectedValue && <LiftDisplay 
             key={index} 
             index={lifts.length-index-1} 
             sets={data.sets} 
@@ -196,7 +194,7 @@ export default function Workouts({navigation}) {
             weight={data.weight} 
             onDelete={deleteRow}
             width={windowWidth*0.3}/>
-          )}
+          ))}
           {lifts.length == 0 && <FillerDisplay width={windowWidth*0.3}/>}
         </ScrollView>
       </View>}
@@ -208,20 +206,20 @@ export default function Workouts({navigation}) {
     }
 }
 
-function getVolume(lifts, liftType) {
+function getOneRepMax(lifts, liftType) {
   const totals = {};
   lifts.forEach(({sets, reps, weight, date, movement}) => {
     if (movement == liftType) {
       if (!totals[date]) {
         totals[date] = {};
-        totals[date].volume = 0;
+        totals[date].max = 0;
       }
-      totals[date].volume += sets*reps*weight;
+      totals[date].max = Math.max(totals[date].max, Math.pow(reps, 0.1)*weight);
     }});
 
   // Convert back to array form if needed:
-  return Object.entries(totals).map(([date, { volume }]) => [
-    volume,
+  return Object.entries(totals).map(([date, { max }]) => [
+    max,
     date
   ]);
 }

@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View, Pressable, Image } from 'react-native';
+import { signOut } from '../supa';
 
 export default function Sidebar({navigation, text}){
 
@@ -20,8 +21,18 @@ export default function Sidebar({navigation, text}){
         <Image source={require('../assets/Scale.png')} style={styles.icon}/>
         {text && <Text style={styles.buttonText}>Weigh-Ins</Text>}
       </Pressable>
+      <Pressable style={styles.redirectPressable} onPress={handleLogout}>
+        <Image source={require('../assets/Logout.png')} style={styles.icon}/>
+        {text && <Text style={styles.buttonText}>Log Out</Text>}
+      </Pressable>
     </View>
   )
+}
+async function handleLogout() {
+  const error = await signOut()
+  if (!error) {
+    navigation.navigate("Auth")
+  }
 }
 
 const styles = StyleSheet.create({

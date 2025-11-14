@@ -25,6 +25,7 @@ export default function Authentication({navigation}) {
   const aspectRatio = windowWidth/windowHeight
 
   const [signUpSelected, setSignUpSelected] = useState(false)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -52,6 +53,18 @@ export default function Authentication({navigation}) {
           </Pressable>
         </View>
         <Text style={styles.errorMessage}>{errorMessage}</Text>
+        {signUpSelected && 
+        <View style={[styles.inputView]}>
+          <Image source={require('../assets/Users.png')} style={styles.icon}/>
+          <Text style={styles.separator}> | </Text>
+          <View style={{flex: 1}}>
+            <Text style={styles.promptText}>Display Name</Text>
+            <TextInput 
+                value={name ?? ''}
+                onChangeText={setName}
+                style={styles.textbox}/>
+          </View>
+        </View>}
         <View style={[styles.inputView]}>
           <Image source={require('../assets/Email.png')} style={styles.icon}/>
           <Text style={styles.separator}> | </Text>
@@ -119,17 +132,20 @@ export default function Authentication({navigation}) {
   }
 
   async function signup() {
-    if (confirmPassword !== password && signUpSelected) {
+    if (confirmPassword !== password) {
       setErrorMessage('Passwords do not match.')
       setConfirmPassword('')
       return
     }
-
+    if (confirmPassword == '' || password == '' || email == '' || name == '') {
+      setErrorMessage('Fill out all fields.')
+      return;
+    }
     try {
       setLoading(true)
       setErrorMessage('')
 
-      const error = await signUpWithEmail({ email, password })
+      const error = await signUpWithEmail({ email, password, name })
 
       if (error) {
         setErrorMessage(error.message)
@@ -138,9 +154,6 @@ export default function Authentication({navigation}) {
         if (userId) {
           console.log(userId)
           navigation.navigate("Home")
-        } else {
-          // for new users, supabase might require email verification first
-          setErrorMessage("Check your email for a verification link.")
         }
       }
     } catch (err) {

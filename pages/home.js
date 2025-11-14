@@ -4,6 +4,8 @@ import {useState, useEffect} from 'react'
 import Sidebar from "../items/sidebar"
 import Recipe from "../items/recipe"
 import Bottombar from "../items/bottombar"
+import Friendbar from '../items/friendbar';
+import Topbar from '../items/topbar'
 
 export default function Home({navigation}) {
   const recipeData = getRecipeData();
@@ -28,18 +30,23 @@ export default function Home({navigation}) {
   // feed is recipe posts
   return (
     <View style={styles.appContainer}>
+      {aspectRatio<1.2 && <Topbar navigation={navigation}/>}
       {aspectRatio>1.2 && 
       <View style={{height: windowHeight}}>
         <Sidebar navigation={navigation} text={aspectRatio > 1.8}/>
       </View>}
       {aspectRatio<1.2 && <Bottombar navigation={navigation}/>}
       {/* This is going to be the main feed for recipes */}
-      <ScrollView scrollEnabled={true} contentContainerStyle={[styles.feed, {height: windowHeight}]}>
+      <ScrollView style={{height: windowHeight, flex: 3}} scrollEnabled={true} contentContainerStyle={[styles.feed, {paddingTop: aspectRatio<1.2 ? 110 : 30}]}>
         <Recipe data={recipeData}/>
         <Recipe data={recipeData}/>
         <Recipe data={recipeData}/>
         <Recipe data={recipeData}/>
       </ScrollView>
+      {aspectRatio>1.2 && 
+      <View style={[styles.friendbarView, {height: windowHeight}]}>
+        <Friendbar/>
+      </View>}
     </View>
   );
 }
@@ -64,6 +71,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#000000',
     alignItems: 'flex-start',
+    flex: 1,
   },
   menuButton: {
     margin: 10,
@@ -76,11 +84,16 @@ const styles = StyleSheet.create({
     objectFit: 'fill'
   },
   feed: {
-    width: '100%',
-    paddingTop: 60,
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingBottom: 100
+  },
+  friendbarView: { 
+    flex: 1,
+    minWidth: 300, 
+    backgroundColor: '#000', 
+    borderLeftColor: '#555', 
+    borderLeftWidth: 0.5,
   }
 });

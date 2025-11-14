@@ -28,6 +28,12 @@ export const getUserId = async () => {
   } = await supabase.auth.getSession()
   return session?.user?.id ?? null
 }
+export const getUserEmail = async () => {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+  return session?.user?.email ?? null
+}
 export async function fetchWeighIns() {
   const userId = await getUserId()
   if (!userId) {
@@ -240,14 +246,305 @@ export async function signInWithEmail({email, password}) {
   })
   return error
 }
-export async function signUpWithEmail({email, password}) {
+export async function signUpWithEmail({email, password, name}) {
   const {
     data: { session },
     error,
   } = await supabase.auth.signUp({
     email: email,
     password: password,
+    options: {
+      data: {
+        display_name: name,
+      },
+    },
   })
   if (!session) Alert.alert('Please check your inbox for email verification!')
   return error
+}
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  if (error) {
+    console.error("Error signing out:", error.message)
+    return error
+  }
+  return null
+}
+export async function addFriend(friendEmail) {
+  //make sure all the data is in order
+  if (friendEmail == null) {
+    console.error('Friend email is null')
+    return []
+  }
+  const userEmail = await getUserEmail()
+  if (!userEmail) {
+    console.error('No user email found. User might not be logged in.')
+    return []
+  }
+  if (userEmail == friendEmail) {
+    console.error('You cannot friend yourself.')
+    return []
+  }
+  if (!(await userExists(friendEmail))) {
+    console.error('This user does not exist.')
+    return []
+  }
+
+  //see if the friendship already exists
+  const { data, error } = await supabase
+    .from('friends')
+    .select('*')
+    .eq('user_email', userEmail)
+    .eq('friend_email', friendEmail)
+  if (error) {
+    console.error('Error adding friend:', error1.message)
+    return []
+  }
+  else if (data.length > 0) {
+    console.log(data)
+    acceptFriend({friendEmail})
+    return []
+  }
+
+  //create new friendship
+  const { data1, error1 } = await supabase
+    .from('friends')
+    .insert([
+      {
+        user_email: userEmail,
+        friend_email: friendEmail,
+        accepted: true
+      },
+    ])
+    .select()
+  if (error1) {
+    console.error('Error adding friend:', error1.message)
+    return []
+  }
+  const { data2, error2 } = await supabase
+    .from('friends')
+    .insert([
+      {
+        user_email: friendEmail,
+        friend_email: userEmail,
+        accepted: false
+      },
+    ])
+    .select()
+  if (error2) {
+    console.error('Error adding friend:', error2.message)
+    return []
+  }
+
+  return data1, data2
+}
+export async function getFriends(){
+  const userEmail = await getUserEmail()
+  if (!userEmail) {
+    console.error('No user email found. User might not be logged in.')
+    return []
+  }
+  const { data, error } = await supabase
+    .from('friends')
+    .select('friend_email, accepted')
+    .eq('user_email', userEmail)
+
+  if (error) {
+    console.error('Error fetching friends:', error.message)
+    return []
+  }
+
+  return data
+}
+export async function acceptFriend(friendEmail){
+  const userEmail = await getUserEmail()
+  if (!userEmail) {
+    console.error('No user email found. User might not be logged in.')
+    return []
+  }
+  if (userEmail == friendEmail) {
+    console.error('You cannot friend yourself.')
+    return []
+  }
+  const { data: data1, error: error1 } = await supabase
+    .from('friends')
+    .select('id')
+    .eq('user_email', friendEmail)
+    .eq('friend_email', userEmail)
+    .eq('accepted', true)
+  if (error1) {
+    console.error('Error finding friend:', error1.message)
+    return []
+  }
+  if (data1.length == 0 || data1 == null) {
+    console.error('Friend has not added you yet.')
+    return []
+  }
+  const { data: data2, error: error2 } = await supabase
+    .from('friends')
+    .update({accepted: true})
+    .eq('user_email', userEmail)
+    .eq('friend_email', friendEmail)
+    .eq('accepted', false)
+    .select()
+  if (error2 || data2.length == 0) {
+    console.error('Error adding friend')
+    return []
+  }
+
+  return {data1, data2};
+}
+export async function removeFriend(friendEmail){
+  const userEmail = await getUserEmail()
+  if (!userEmail) {
+    console.error('No user email found. User might not be logged in.')
+    return []
+  }
+  if (userEmail == friendEmail) {
+    console.error('You cannot friend yourself.')
+    return []
+  }
+  const { data: data1, error: error1 } = await supabase
+    .from('friends')
+    .select('id')
+    .eq('user_email', userEmail)
+    .eq('friend_email', friendEmail)
+    .eq('accepted', true)
+  if (error1) {
+    console.error('Error finding friend:', error1.message)
+    return []
+  }
+  if (data1.length == 0 || data1 == null) {
+    console.error('You have not added this person yet.')
+    return []
+  }
+  const { data: data2, error: error2 } = await supabase
+    .from('friends')
+    .update({accepted: false})
+    .eq('user_email', userEmail)
+    .eq('friend_email', friendEmail)
+    .eq('accepted', true)
+    .select()
+  if (error2 || data2.length == 0) {
+    console.error('Error adding friend')
+    return []
+  }
+
+  return {data1, data2};
+}
+export async function userExists(email) {
+  if (!email) return false;
+
+  const { data, error } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking user:', error);
+    return false;
+  }
+
+  return !!data;
+}
+export async function getFriendInfo(friendEmail) {
+  //want to know if the friend request has been accepted, or pending which direction
+  //want to know workout streak of the user 
+  //want to know the display name of the user
+  const userEmail = await getUserEmail()
+  if (!userEmail) {
+    console.error('No user email found. User might not be logged in.')
+    return []
+  }
+  const { data: acceptedByUser, error: error1 } = await supabase
+    .from('friends')
+    .select('accepted')
+    .eq('user_email', userEmail)
+    .eq('friend_email', friendEmail)
+
+  if (error1|| acceptedByUser.length != 1) {
+    console.error('Error fetching friend info:', error1.message)
+    return []
+  }
+  const { data: acceptedByFriend, error: error2 } = await supabase
+    .from('friends')
+    .select('accepted')
+    .eq('user_email', friendEmail)
+    .eq('friend_email', userEmail)
+    
+  if (error2 || acceptedByFriend.length != 1) {
+    console.error('Error fetching friend info:', error2.message)
+    return []
+  }
+  const { data: username, error: error } = await supabase
+    .from('user_profiles')
+    .select('display_name')
+    .eq('email', friendEmail)
+
+  if (error|| username.length != 1) {
+    console.error('Error fetching friend info:', error);
+    return false;
+  }
+  const streak = await getStreak(friendEmail)
+  return {
+    acceptedByUser: acceptedByUser[0].accepted,
+    acceptedByFriend: acceptedByFriend[0].accepted,
+    displayName: username[0].display_name,
+    streak: streak
+  }
+}
+export async function getStreak(email) {
+  //fetch lifts
+  const { data: userId, error: error1 } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .eq('email', email)
+
+  if (error1 || userId.length != 1) {
+    console.error('Error fetching friend info:', error1);
+    return false;
+  }
+  const { data: lifts, error: error2 } = await supabase
+    .from('lifts')
+    .select('date')
+    .eq('user_id', userId[0].id)
+    .order('date', { ascending: true })
+
+  if (error2) {
+    console.error('Error fetching lifts:', error2.message)
+    return []
+  }
+  if (!lifts || lifts.length === 0) return 0;
+
+  // Convert dates to unique days (YYYY-MM-DD)
+  const uniqueDates = [
+    ...new Set(lifts.map(l => new Date(l.date).toISOString().split('T')[0]))
+  ].sort((a, b) => new Date(b) - new Date(a));
+
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  // Helper: date → "YYYY-MM-DD"
+  const fmt = d => d.toISOString().split('T')[0];
+
+  let streak = 0;
+  let current = new Date(today);
+
+  // Check if they lifted today
+  if (uniqueDates.includes(fmt(today))) {
+    streak++;
+    current = new Date(yesterday); // start checking from yesterday
+  } else {
+    current = new Date(yesterday);
+  }
+
+  // Check consecutive days before current
+  while (uniqueDates.includes(fmt(current))) {
+    streak++;
+    current.setDate(current.getDate() - 1);
+  }
+
+  return streak;
 }

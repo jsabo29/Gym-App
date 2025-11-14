@@ -51,9 +51,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    width: 40,
-    height: 40,
-    margin: 10,
+    width: 30,
+    height: 30,
+    margin: 0,
     marginBottom: 20,
     objectFit: 'cover'
   },
