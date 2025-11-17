@@ -1,5 +1,6 @@
 import { SUPABASE_URL, SUPABASE_KEY } from '@env'
 import { useEffect } from 'react'
+import * as FileSystem from 'expo-file-system/legacy'
 import { createClient, processLock } from '@supabase/supabase-js'
 import { AppState, Platform, Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -547,4 +548,118 @@ export async function getStreak(email) {
   }
 
   return streak;
+}
+export async function uploadImage(imageUri) {
+  try {
+    if (!imageUri) return null
+
+    // 1. Fetch the local file as arrayBuffer
+    const response = await fetch(imageUri)
+    const arrayBuffer = await response.arrayBuffer()
+
+    // 2. Convert to Uint8Array
+    const uint8Array = new Uint8Array(arrayBuffer)
+
+    // 3. Generate file name
+    const ext = imageUri.split('.').pop() || 'jpg'
+    const filePath = `${Date.now()}.${ext}`
+    const contentType = `image/${ext}`
+
+    // 4. Upload to Supabase
+    const { data, error } = await supabase.storage
+      .from('recipe_images')
+      .upload(filePath, uint8Array, {
+        contentType,
+        upsert: false,
+      })
+
+    if (error) {
+      console.error('Upload error:', error)
+      return null
+    }
+
+    // 5. Get public URL
+    const { data: publicData } = supabase.storage
+      .from('recipe_images')
+      .getPublicUrl(filePath)
+
+    console.log('Public URL:', publicData.publicUrl)
+
+    return { path: filePath, url: publicData.publicUrl }
+
+  } catch (err) {
+    console.error('uploadImage() crashed:', err)
+    return null
+  }
+}
+export async function addRecipe({image, title, calories, protein, servings, time, ingredients, instructions}) {
+  const userId = await getUserId()
+  if (!userId) {
+    console.error('No user ID found. User might not be logged in.')
+    return []
+  }
+  if (!image) {
+    console.error('No image uploaded.')
+    return []
+  }
+  const { data: username, error: error1 } = await supabase
+    .from('user_profiles')
+    .select('display_name')
+    .eq('id', userId)
+
+  if (error1|| username.length != 1) {
+    console.error('Error fetching user info:', error1);
+    return false;
+  }
+  const { path, url } = await uploadImage(image)
+  const { data, error } = await supabase
+    .from('recipes')
+    .insert([
+      {
+        user_id: userId,
+        display_name: username[0].display_name,
+        title: title,
+        calories: calories,
+        protein: protein,
+        servings: servings,
+        time: time,
+        ingredients: ingredients,
+        instructions: instructions,
+        image_url: url
+      },
+    ])
+    .select()
+
+  if (error) {
+    console.error('Error inserting recipe:', error.message)
+    return null
+  }
+  return data
+}
+export async function fetchRecipes() {
+  try {
+    // 1. Fetch all recipes
+    const { data, error } = await supabase
+      .from('recipes') // your recipes table
+      .select('*')   // fetch all columns
+
+    if (error) {
+      console.error('Error fetching recipes:', error)
+      return []
+    }
+
+    // 2. Map data so images are ready for React Native
+    const formattedData = data.map(recipe => ({
+      ...recipe,
+      image: recipe.image_url
+        ? { uri: recipe.image_url } // React Native expects { uri: '...' }
+        : null
+    }))
+
+    return formattedData
+
+  } catch (err) {
+    console.error('fetchRecipes crashed:', err)
+    return []
+  }
 }

@@ -2,46 +2,26 @@ import { StyleSheet, View, Pressable, TextInput, Image, Platform } from 'react-n
 import { useState } from 'react'
 import { signOut } from '../supa';
 
-export default function Topbar({navigation}){
+export default function Topbar({navigation, permanentbar}){
   const [searchBar, setSearchBar] = useState('')
   return(
-    <View style={[styles.redirectContainer, (Platform.OS === 'web'
-      ? {
-          position: 'fixed',
-          top: 0,
-          left: 0,
-        }
-      : {
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          paddingTop: 32
-        })]}>
-      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Friends")}>
-        <Image source={require('../assets/Users.png')} style={styles.icon}></Image>
+    <View style={[styles.redirectContainer, {paddingTop: Platform.OS == 'ios' ? 45 : 0}]}>
+      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("User")}>
+        <Image source={require('../assets/Profile Picture.png')} style={styles.icon}></Image>
       </Pressable>
       <View style={[styles.redirectPressable, {width: '60%'}]}>
         <TextInput 
           value={searchBar ?? ''}
+          placeholder='Search'
+          placeholderTextColor="#888"
           onChangeText={setSearchBar}
           style={styles.textbox}/>
       </View>
-      <Pressable style={styles.redirectPressable} onPress={handleLogout}>
-        <Image source={require('../assets/Logout.png')} style={styles.icon}/>
+      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("AddRecipe")}>
+        <Image source={require('../assets/Plus.png')} style={styles.icon}/>
       </Pressable>
     </View>
   )
-  async function handleLogout() {
-  console.log('handling')
-  const error = await signOut()
-  if (!error) {
-    console.log('navigating')
-    navigation.navigate("Auth")
-  }
-  else{
-    console.log('Error: ', error)
-  }
-}
 }
 
 const styles = StyleSheet.create({
@@ -52,10 +32,13 @@ const styles = StyleSheet.create({
     paddingRight: 40,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     backgroundColor: '#000',
     borderBottomColor: '#555',
     borderBottomWidth: 0.5,
+    position: 'absolute',
+    top: 0,
+    left: 0,
   },
   redirectPressable: {
     borderRadius: 6,
@@ -69,7 +52,6 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     margin: 0,
-    marginTop: 20,
     objectFit: 'cover'
   },
   logo: {
@@ -91,7 +73,6 @@ const styles = StyleSheet.create({
     borderColor: '#FF4B0A',
     height: 40,
     margin: 0,
-    marginTop: 20,
     width: '100%'
   },
 })

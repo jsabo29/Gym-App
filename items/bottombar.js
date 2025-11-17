@@ -3,7 +3,7 @@ import { StyleSheet, View, Pressable, Image, Platform } from 'react-native';
 export default function Bottombar({navigation}){
 
   return(
-    <View style={[styles.redirectContainer, (Platform.OS === 'web'
+    <View style={[styles.container, (Platform.OS === 'web'
       ? {
           position: 'fixed',
           bottom: 0,
@@ -14,11 +14,14 @@ export default function Bottombar({navigation}){
           bottom: 0,
           left: 0,
         })]}>
-      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Home")}>
-        <Image source={require('../assets/Logo.png')} style={styles.icon}></Image>
+      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Friends")}>
+        <Image source={require('../assets/Users.png')} style={styles.icon}></Image>
       </Pressable>
       <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Workouts")}>
         <Image source={require('../assets/Lifts.png')} style={styles.icon}/>
+      </Pressable>
+      <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Home")}>
+        <Image source={require('../assets/Home.png')} style={[styles.icon, {height: 40, width: 40}]}></Image>
       </Pressable>
       <Pressable style={styles.redirectPressable} onPress={() => navigation.navigate("Meals")}>
         <Image source={require('../assets/Meals.png')} style={styles.icon}/>
@@ -31,13 +34,14 @@ export default function Bottombar({navigation}){
 }
 
 const styles = StyleSheet.create({
-  redirectContainer: {
+  container: {
     zIndex: 9999,
     width:'100%',
     paddingLeft: 40,
     paddingRight: 40,
     flexDirection: 'row',
     justifyContent: 'space-evenly',
+    alignItems: 'center',
     backgroundColor: '#000',
     borderTopColor: '#555',
     borderTopWidth: 0.5,
@@ -51,8 +55,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   icon: {
-    width: 30,
-    height: 30,
+    width: 25,
+    height: 25,
     margin: 0,
     marginBottom: 20,
     objectFit: 'cover'

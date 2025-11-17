@@ -5,6 +5,12 @@ export default function Recipe({data}) {
   const [showData, changeShowData] = useState(false);
   return (
     <Pressable style={styles.mainContainer} onPress={() => changeShowData(!showData)}>
+      <Pressable style={{alignSelf: 'flex-start', marginLeft: '10%', marginRight: '10%'}} onPress={(e) => {
+        e.stopPropagation()
+        console.log(data.display_name)
+      }}>
+        <Text style={styles.name}>{data.display_name}</Text>
+      </Pressable>
       <View style={styles.imageDiv}>
         <Image style={styles.recipeImage} source={data.image}/>
       </View>
@@ -14,7 +20,7 @@ export default function Recipe({data}) {
         <View style={{justifyContent: 'space-around', flexDirection: 'row', margin: 5}}>
           <Text style={styles.infoText}>Calories: {data.calories}</Text>
           <Text style={styles.infoText}>Protein: {data.protein}g</Text>
-          <Text style={styles.infoText}>Time: {data.prepTime}g</Text>
+          <Text style={styles.infoText}>Time: {data.time}</Text>
         </View>
         <Text style={styles.titleText}>Ingredients</Text>
         {data.ingredients.map((ingredient, index) =>
@@ -43,6 +49,15 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     padding: 20,
     margin: 10,
+  },
+  name: {
+    color: '#EEF1EF',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginBottom: '2%',
+    textAlign: 'left',
+    alignSelf: 'flex-start',
+    userSelect: 'none',
   },
   recipeImage: {
     width: '100%',

@@ -25,7 +25,10 @@
       "package": "com.anonymous.GymBros"
     },
     "web": {
-      "favicon": "./assets/web-icon.png"
+      "favicon": "./assets/web-icon.png",
+      "build": {
+        "babel": { "include": ["expo-image-picker"] }
+      }
     },
     "plugins": [
       "expo-router"

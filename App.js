@@ -8,6 +8,7 @@ import Workouts from './pages/workouts-wrapper';
 import Weighins from './pages/weigh-ins-wrapper';
 import User from './pages/profile';
 import Friends from './pages/friend-page'
+import AddRecipe from './pages/add'
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +23,7 @@ export default function App() {
         <Stack.Screen name="Weigh-ins" component={Weighins} options={{ headerShown: false, gestureEnabled: false }}/>
         <Stack.Screen name="User" component={User} options={{ headerShown: false, gestureEnabled: false }}/>
         <Stack.Screen name="Friends" component={Friends} options={{ headerShown: false, gestureEnabled: false }}/>
+        <Stack.Screen name="AddRecipe" component={AddRecipe} options={{ headerShown: false, gestureEnabled: false }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

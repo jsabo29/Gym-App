@@ -7,8 +7,14 @@ import Bottombar from "../items/bottombar"
 import Friendbar from '../items/friendbar';
 import Topbar from '../items/topbar'
 
+import { fetchRecipes } from '../supa';
+
 export default function Home({navigation}) {
-  const recipeData = getRecipeData();
+  const [recipeData, setRecipeData] = useState([])
+
+  useEffect(() => {
+    fetchRecipes().then(setRecipeData)
+  }, [])
   
   //screen data
   const [windowWidth, setWindowWidth] = useState(Dimensions.get('window').width);
@@ -30,19 +36,20 @@ export default function Home({navigation}) {
   // feed is recipe posts
   return (
     <View style={styles.appContainer}>
-      {aspectRatio<1.2 && <Topbar navigation={navigation}/>}
       {aspectRatio>1.2 && 
       <View style={{height: windowHeight}}>
         <Sidebar navigation={navigation} text={aspectRatio > 1.8}/>
       </View>}
       {aspectRatio<1.2 && <Bottombar navigation={navigation}/>}
       {/* This is going to be the main feed for recipes */}
-      <ScrollView style={{height: windowHeight, flex: 3}} scrollEnabled={true} contentContainerStyle={[styles.feed, {paddingTop: aspectRatio<1.2 ? 110 : 30}]}>
-        <Recipe data={recipeData}/>
-        <Recipe data={recipeData}/>
-        <Recipe data={recipeData}/>
-        <Recipe data={recipeData}/>
-      </ScrollView>
+      <View style={{height: windowHeight, flex: 3, width: 100}}>
+        <Topbar navigation={navigation}/>
+        <ScrollView style={{height: windowHeight}} scrollEnabled={true} contentContainerStyle={[styles.feed, {paddingTop: 110}]}>
+          {shuffle(recipeData).map((value, index) => 
+            <Recipe data={value} key={index}/>
+          )}
+        </ScrollView>
+      </View>
       {aspectRatio>1.2 && 
       <View style={[styles.friendbarView, {height: windowHeight}]}>
         <Friendbar/>
@@ -50,7 +57,14 @@ export default function Home({navigation}) {
     </View>
   );
 }
-
+function shuffle(array) {
+  const arr = [...array];  // avoid mutating original
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 function getRecipeData() {
   const recipeData = {};
   recipeData.image = require('../assets/sample-recipe-image.png');

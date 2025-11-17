@@ -1,7 +1,7 @@
 import {Text, Pressable} from 'react-native'
 import { signOut } from '../supa'
 
-export default function User( {navigation, userId} ) {
+export default function Profile( {navigation, userId} ) {
   return(
     <Pressable onPress={(handleLogout)}>
       <Text>Log Out</Text>

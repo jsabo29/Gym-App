@@ -119,7 +119,7 @@ export default function Meals({navigation}) {
                 value={protein ?? ''}
                 onChangeText={setProtein}
                 style={[styles.textbox, {flex: 1}]}/>
-              </View>
+            </View>
             <View style={styles.addContainer}>
               <Text style={styles.label}>Date</Text>
               <TextInput 
